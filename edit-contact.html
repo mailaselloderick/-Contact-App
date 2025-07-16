@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Contact</title>
+</head>
+<body onload="getContact()">
+
+    <div id="avatarImage"></div>
+
+    <form id="editForm">
+        <label for="firstname">First Name:</label><br>
+        <input type="text" id="firstname" name="firstname" readonly><br><br>
+
+        <label for="lastname">Last Name:</label><br>
+        <input type="text" id="lastname" name="lastname" readonly><br><br>
+
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" readonly><br><br>
+
+        <label for="mobile">Phone Number:</label><br>
+        <input type="text" id="mobile" name="mobile" readonly><br><br>
+
+        <label for="avatar">Select a file:</label><br>
+        <input type="file" id="avatar" name="avatar" hidden><br><br>
+
+        <button type="submit" id="submitForm" hidden>Submit</button>
+    </form>
+
+    <br>
+    <button type="button" id="homeLink">Home</button>
+    <button type="button" id="editContact">Edit</button>
+    <button type="button" id="deleteContact">Delete</button>
+
+    <script src="config.js"></script>
+
+    <script>
+        const id = getId();
+
+        document.getElementById("homeLink").addEventListener('click', homeLink);
+        document.getElementById("editContact").addEventListener('click', enableEdit);
+        document.getElementById("submitForm").addEventListener('click', submitEdit);
+
+        function getId() {
+            const url = new URL(window.location.href);
+            return url.searchParams.get("id");
+        }
+
+        function getContact() {
+            fetch(rootPath + "controller/get-contacts/?apiKey=" + apiKey + "&id=" + id)
+                .then(res => res.json())
+                .then(data => {
+                    const contact = data[0];
+                    document.getElementById("avatarImage").innerHTML =
+                        `<img src="${rootPath}controller/uploads/${contact.avatar}" width="100"/>`;
+                    document.getElementById("firstname").value = contact.firstname;
+                    document.getElementById("lastname").value = contact.lastname;
+                    document.getElementById("email").value = contact.email;
+                    document.getElementById("mobile").value = contact.mobile;
+                });
+        }
+
+        function enableEdit() {
+            document.getElementById("firstname").readOnly = false;
+            document.getElementById("lastname").readOnly = false;
+            document.getElementById("email").readOnly = false;
+            document.getElementById("mobile").readOnly = false;
+            document.getElementById("avatar").hidden = false;
+            document.getElementById("submitForm").hidden = false;
+        }
+
+        function submitEdit(e) {
+            e.preventDefault();
+            const form = new FormData(document.getElementById("editForm"));
+            form.append("apiKey", apiKey);
+            form.append("id", id);
+
+            fetch(rootPath + "controller/edit-contact/", {
+                method: "POST",
+                headers: { 'Accept': 'application/json, */*' },
+                body: form
+            })
+            .then(res => res.text())
+            .then(data => {
+                if (data === "1") {
+                    alert("Contact updated successfully!");
+                    homeLink();
+                } else {
+                    alert("Error: " + data);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error submitting form.");
+            });
+        }
+
+        function homeLink() {
+            window.open("index.html", "_self");
+        }
+    </script>
+
+</body>
+</html>
